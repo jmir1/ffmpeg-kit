@@ -1016,10 +1016,10 @@ set_library() {
     ;;
   gnutls)
     ENABLED_LIBRARIES[LIBRARY_GNUTLS]=$2
-    set_virtual_library "zlib" $2
+    #set_virtual_library "zlib" $2
     set_library "nettle" $2
     set_library "gmp" $2
-    set_virtual_library "libiconv" $2
+    #set_virtual_library "libiconv" $2
     ;;
   harfbuzz)
     ENABLED_LIBRARIES[LIBRARY_HARFBUZZ]=$2

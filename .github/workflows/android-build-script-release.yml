@@ -1,0 +1,86 @@
+name: publish release
+
+on:
+  push:
+    tags:
+      - '*'
+    paths:
+      - '.github/workflows/android-build-script-release.yml'
+      - 'android/**'
+      - 'scripts/**'
+      - 'tools/**'
+      - 'android.sh'
+  pull_request:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/android-build-script-release.yml'
+      - 'android/**'
+      - 'scripts/**'
+      - 'tools/**'
+      - 'android.sh'
+
+jobs:
+  build-lts-on-linux:
+    name: android lts on linux
+    runs-on: ubuntu-20.04
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v2
+      - name: install packages
+        # these requirements are maybe a bit overkill but these are the accumulated requirements of all libraries
+        run: |
+          sudo apt update
+          sudo apt install autoconf pkg-config libtool ninja-build python3 python3-pip python3-setuptools \
+            unzip nasm autogen dash git-core autoconf libtool gettext autopoint automake nettle-dev \
+            libp11-kit-dev libtspi-dev libunistring-dev guile-2.2-dev libtasn1-bin libtasn1-6-dev \
+            libidn2-0-dev gawk gperf libtss2-dev libunbound-dev dns-root-data bison gtk-doc-tools \
+            texinfo texlive texlive-extra-utils valgrind nodejs softhsm2 datefudge lcov libssl-dev \
+            libcmocka-dev expect libev-dev dieharder openssl abigail-tools socat net-tools ppp util-linux \
+            ragel gcc g++ libfreetype6-dev libglib2.0-dev libcairo2-dev perl
+          sudo pip3 install meson
+      - name: set up adopt jdk 8
+        uses: actions/setup-java@v2.2.0
+        with:
+          distribution: 'adopt'
+          java-version: '8'
+      - name: set up android ndk
+        run: |
+          curl -s "https://dl.google.com/android/repository/android-ndk-r23b-linux.zip" -o ndk.zip
+          unzip -q -o ndk.zip -d .ndk
+          echo "ANDROID_NDK_ROOT=$PWD/.ndk/$(ls .ndk)" >> $GITHUB_ENV
+      - name: run the build script
+        run: |
+          ./android.sh --lts --disable-arm-v7a-neon --disable-lib-gnutls --enable-gpl --enable-android-media-codec --enable-android-zlib \
+            --enable-chromaprint --enable-dav1d --enable-fontconfig --enable-freetype --enable-fribidi --enable-harfbuzz --enable-gnutls \
+            --enable-kvazaar --enable-lame --enable-libaom --enable-libass --enable-libiconv --enable-libilbc --enable-libtheora \
+            --enable-libvorbis --enable-libvpx --enable-libwebp --enable-tiff --enable-libxml2 --enable-opencore-amr --enable-openh264 \
+            --enable-openssl --enable-opus --enable-sdl --enable-shine --enable-snappy --enable-soxr --enable-speex --enable-srt \
+            --enable-twolame --enable-vo-amrwbenc --enable-zimg --enable-libvidstab --enable-rubberband --enable-x264 --enable-x265 \
+            --enable-xvidcore --enable-libpng --enable-libuuid --enable-expat --enable-tesseract --enable-leptonica --enable-giflib \
+            --enable-jpeg --enable-libogg --enable-cpu-features --enable-libsndfile --enable-libsamplerate
+      - name: print build logs
+        if: ${{ always() }}
+        run: cat build.log
+      - name: print ffbuild logs
+        if: ${{ failure() }}
+        run: '[[ -f ./src/ffmpeg/ffbuild/config.log ]] && tail -50 ./src/ffmpeg/ffbuild/config.log'
+      - name: copy build artifacts
+        if: startsWith(github.ref, 'refs/tags/')
+        run: |
+          set -e
+          mv ${{ env.FFMPEG_KIT_RELEASE_FILE }} aniyomi-ffmpeg-kit-${{ github.ref_name }}.aar
+      - name: release artifact
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v0.1.14
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: aniyomi-ffmpeg-kit ${{ github.ref_name }}
+          body: |
+            library version ${{ github.ref_name }}
+          files: |
+            aniyomi-ffmpeg-kit-${{ github.ref_name }}.aar
+          draft: false
+          prerelease: false

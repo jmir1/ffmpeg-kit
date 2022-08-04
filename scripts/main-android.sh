@@ -45,6 +45,7 @@ for library in {1..50}; do
     ENABLED_LIBRARY=$(get_library_name $((library - 1)))
     enabled_library_list+=(${ENABLED_LIBRARY})
 
+    echo -e "INFO: Enabled library ${ENABLED_LIBRARY} will be built\n"
     echo -e "INFO: Enabled library ${ENABLED_LIBRARY} will be built\n" 1>>"${BASEDIR}"/build.log 2>&1
   fi
 done
@@ -198,6 +199,7 @@ while [ ${#enabled_library_list[@]} -gt $completed ]; do
         echo "${library}: already built"
       fi
     else
+      echo -e "INFO: Skipping $library, dependencies built=$run, already built=${!BUILD_COMPLETED_FLAG}\n"
       echo -e "INFO: Skipping $library, dependencies built=$run, already built=${!BUILD_COMPLETED_FLAG}\n" 1>>"${BASEDIR}"/build.log 2>&1
     fi
   done
@@ -251,4 +253,4 @@ else
   echo -e "\nffmpeg: skipped"
 fi
 
-echo -e "\nINFO: Completed build for ${ARCH} on API level ${API} at $(date)\n" 1>>"${BASEDIR}"/build.log 2>&1
+echo -e "\nINFO: Completed build for ${ARCH} on API level ${API} at $(date)\n"# 1>>"${BASEDIR}"/build.log 2>&1

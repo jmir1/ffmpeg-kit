@@ -376,6 +376,7 @@ if [[ -n ${ANDROID_ARCHITECTURES} ]]; then
     rm -rf "${FFMPEG_KIT_AAR}" 1>>"${BASEDIR}"/build.log 2>&1
     mkdir -p "${FFMPEG_KIT_AAR}" 1>>"${BASEDIR}"/build.log 2>&1
     cp "${BASEDIR}"/android/ffmpeg-kit-android-lib/build/outputs/aar/ffmpeg-kit-release.aar "${FFMPEG_KIT_AAR}"/ffmpeg-kit.aar 1>>"${BASEDIR}"/build.log 2>&1
+    [ -z $GITHUB_ENV ] || echo FFMPEG_KIT_RELEASE_FILE="${FFMPEG_KIT_AAR}"/ffmpeg-kit.aar >> $GITHUB_ENV
     if [ $? -ne 0 ]; then
       echo -e "failed\n"
       exit 1
