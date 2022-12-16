@@ -11,10 +11,7 @@ rm -rf "${BUILD_DIR}" || return 1
 meson "${BUILD_DIR}" \
   --cross-file="$CROSS_FILE" \
   -Db_lto=true \
-  -Db_ndebug=false \
-  -Denable_asm=false \
-  -Denable_tools=false \
-  -Denable_examples=false \
+  -Dstack_alignment=16 \
   -Denable_tests=false || return 1
 
 cd "${BUILD_DIR}" || return 1

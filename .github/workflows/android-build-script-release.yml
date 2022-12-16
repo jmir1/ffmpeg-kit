@@ -23,7 +23,7 @@ on:
 jobs:
   build-lts-on-linux:
     name: android lts on linux
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     defaults:
       run:
         shell: bash
@@ -53,14 +53,9 @@ jobs:
           echo "ANDROID_NDK_ROOT=$PWD/.ndk/$(ls .ndk)" >> $GITHUB_ENV
       - name: run the build script
         run: |
-          ./android.sh --lts --disable-arm-v7a-neon --disable-lib-gnutls --enable-gpl --enable-android-media-codec --enable-android-zlib \
-            --enable-chromaprint --enable-dav1d --enable-fontconfig --enable-freetype --enable-fribidi --enable-harfbuzz --enable-gnutls \
-            --enable-kvazaar --enable-lame --enable-libaom --enable-libass --enable-libiconv --enable-libilbc --enable-libtheora \
-            --enable-libvorbis --enable-libvpx --enable-libwebp --enable-tiff --enable-libxml2 --enable-opencore-amr --enable-openh264 \
-            --enable-openssl --enable-opus --enable-sdl --enable-shine --enable-snappy --enable-soxr --enable-speex --enable-srt \
-            --enable-twolame --enable-vo-amrwbenc --enable-zimg --enable-libvidstab --enable-rubberband --enable-x264 --enable-x265 \
-            --enable-xvidcore --enable-libpng --enable-libuuid --enable-expat --enable-tesseract --enable-leptonica --enable-giflib \
-            --enable-jpeg --enable-libogg --enable-cpu-features --enable-libsndfile --enable-libsamplerate
+          ./android.sh --lts --disable-arm-v7a-neon --enable-android-media-codec --enable-dav1d \
+            --enable-libxml2 --enable-mbedtls --enable-gpl --enable-freetype --enable-fribidi \
+            --enable-harfbuzz --enable-libass
       - name: print build logs
         if: ${{ always() }}
         run: cat build.log

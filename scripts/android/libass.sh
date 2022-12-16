@@ -10,7 +10,7 @@ x86)
   ASM_OPTIONS="	--disable-asm"
   ;;
 *)
-  ASM_OPTIONS="	--enable-asm"
+  ASM_OPTIONS=""
   ;;
 esac
 

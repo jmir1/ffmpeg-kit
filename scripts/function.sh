@@ -176,6 +176,7 @@ get_library_name() {
       echo "macos-opengl"
     fi
     ;;
+  62) echo "mbedtls" ;;
   esac
 }
 
@@ -243,6 +244,7 @@ from_library_name() {
   macos-coreimage) echo 59 ;;
   macos-opencl) echo 60 ;;
   macos-opengl) echo 61 ;;
+  mbedtls) echo 62 ;;
   esac
 }
 
@@ -258,7 +260,7 @@ is_library_supported_on_platform() {
   21 | 22 | 23 | 24 | 25 | 26 | 27 | 28 | 29 | 30 | 31 | 32 | 33 | 34 | 35 | 36 | 37 | 38 | 39 | 40)
     echo "0"
     ;;
-  42 | 43 | 44 | 45 | 46 | 47 | 48)
+  42 | 43 | 44 | 45 | 46 | 47 | 48 | 62)
     echo "0"
     ;;
 
@@ -393,6 +395,9 @@ get_meson_target_host_family() {
 
 get_meson_target_cpu_family() {
   case ${ARCH} in
+  arm64*)
+    echo "aarch64"
+    ;;
   arm*)
     echo "arm"
     ;;
@@ -1161,6 +1166,9 @@ set_library() {
     ENABLED_LIBRARIES[LIBRARY_TIFF]=$2
     ENABLED_LIBRARIES[LIBRARY_JPEG]=$2
     ;;
+  mbedtls)
+    ENABLED_LIBRARIES[LIBRARY_MBEDTLS]=$2
+    ;;
   *)
     print_unknown_library $1
     ;;
@@ -1403,7 +1411,7 @@ print_enabled_libraries() {
   let enabled=0
 
   # SUPPLEMENTARY LIBRARIES NOT PRINTED
-  for library in {50..57} {59..61} {0..36}; do
+  for library in {50..57} {59..62} {0..36}; do
     if [[ ${ENABLED_LIBRARIES[$library]} -eq 1 ]]; then
       if [[ ${enabled} -ge 1 ]]; then
         echo -n ", "
@@ -1841,7 +1849,7 @@ downloaded_library_sources() {
     exit 1
   fi
 
-  for library in {1..50}; do
+  for library in {1..50} 63; do
     if [[ ${!library} -eq 1 ]]; then
       library_name=$(get_library_name $((library - 1)))
 

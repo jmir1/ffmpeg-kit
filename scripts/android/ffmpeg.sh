@@ -8,14 +8,6 @@ fi
 
 LIB_NAME="ffmpeg"
 
-echo -e "----------------------------------------------------------------" 1>>"${BASEDIR}"/build.log 2>&1
-echo -e "\nINFO: Building ${LIB_NAME} for ${HOST} with the following environment variables\n" 1>>"${BASEDIR}"/build.log 2>&1
-env 1>>"${BASEDIR}"/build.log 2>&1
-echo -e "----------------------------------------------------------------\n" 1>>"${BASEDIR}"/build.log 2>&1
-echo -e "INFO: System information\n" 1>>"${BASEDIR}"/build.log 2>&1
-echo -e "INFO: $(uname -a)\n" 1>>"${BASEDIR}"/build.log 2>&1
-echo -e "----------------------------------------------------------------\n" 1>>"${BASEDIR}"/build.log 2>&1
-
 FFMPEG_LIBRARY_PATH="${LIB_INSTALL_BASE}/${LIB_NAME}"
 ANDROID_SYSROOT="${ANDROID_NDK_ROOT}"/toolchains/llvm/prebuilt/"${TOOLCHAIN}"/sysroot
 
@@ -28,6 +20,14 @@ export CFLAGS=$(get_cflags "${LIB_NAME}")
 export CXXFLAGS=$(get_cxxflags "${LIB_NAME}")
 export LDFLAGS=$(get_ldflags "${LIB_NAME}")
 export PKG_CONFIG_LIBDIR="${INSTALL_PKG_CONFIG_DIR}"
+
+echo -e "----------------------------------------------------------------" 1>>"${BASEDIR}"/build.log 2>&1
+echo -e "\nINFO: Building ${LIB_NAME} for ${HOST} with the following environment variables\n" 1>>"${BASEDIR}"/build.log 2>&1
+env 1>>"${BASEDIR}"/build.log 2>&1
+echo -e "----------------------------------------------------------------\n" 1>>"${BASEDIR}"/build.log 2>&1
+echo -e "INFO: System information\n" 1>>"${BASEDIR}"/build.log 2>&1
+echo -e "INFO: $(uname -a)\n" 1>>"${BASEDIR}"/build.log 2>&1
+echo -e "----------------------------------------------------------------\n" 1>>"${BASEDIR}"/build.log 2>&1
 
 cd "${BASEDIR}"/src/"${LIB_NAME}" 1>>"${BASEDIR}"/build.log 2>&1 || return 1
 
@@ -69,7 +69,7 @@ CONFIGURE_POSTFIX=""
 HIGH_PRIORITY_INCLUDES=""
 
 # SET CONFIGURE OPTIONS
-for library in {0..61}; do
+for library in {0..62}; do
   if [[ ${ENABLED_LIBRARIES[$library]} -eq 1 ]]; then
     ENABLED_LIBRARY=$(get_library_name ${library})
 
@@ -94,6 +94,9 @@ for library in {0..61}; do
       LDFLAGS+=" $(pkg-config --libs --static dav1d 2>>"${BASEDIR}"/build.log)"
       CONFIGURE_POSTFIX+=" --enable-libdav1d"
       ;;
+    mbedtls)
+          CONFIGURE_POSTFIX+=" --enable-mbedtls"
+          ;;
     fontconfig)
       CFLAGS+=" $(pkg-config --cflags fontconfig 2>>"${BASEDIR}"/build.log)"
       LDFLAGS+=" $(pkg-config --libs --static fontconfig 2>>"${BASEDIR}"/build.log)"
@@ -417,65 +420,19 @@ else
 fi
 
 ###################################################################
+cpuflags=
+[[ "$HOST" == "arm"* ]] && cpuflags="$cpuflags -mfpu=neon -mcpu=cortex-a8"
 
 ./configure \
-  --cross-prefix="${HOST}-" \
-  --sysroot="${ANDROID_SYSROOT}" \
-  --prefix="${FFMPEG_LIBRARY_PATH}" \
-  --pkg-config="${HOST_PKG_CONFIG_PATH}" \
-  --enable-version3 \
-  --arch="${TARGET_ARCH}" \
-  --cpu="${TARGET_CPU}" \
-  --target-os=android \
-  ${ASM_OPTIONS} \
-  --ar="${AR}" \
-  --cc="${CC}" \
-  --cxx="${CXX}" \
-  --ranlib="${RANLIB}" \
-  --strip="${STRIP}" \
-  --nm="${NM}" \
-  --extra-libs="$(pkg-config --libs --static cpu-features)" \
-  --disable-autodetect \
-  --enable-cross-compile \
-  --enable-pic \
-  --enable-jni \
-  --enable-optimizations \
-  --enable-swscale \
-  ${BUILD_LIBRARY_OPTIONS} \
-  --enable-pthreads \
-  --enable-v4l2-m2m \
-  --disable-outdev=fbdev \
-  --disable-indev=fbdev \
-  ${SIZE_OPTIONS} \
-  --disable-xmm-clobber-test \
-  ${DEBUG_OPTIONS} \
-  --disable-neon-clobber-test \
-  --disable-programs \
-  --disable-postproc \
-  --disable-doc \
-  --disable-htmlpages \
-  --disable-manpages \
-  --disable-podpages \
-  --disable-txtpages \
-  --disable-sndio \
-  --disable-schannel \
-  --disable-securetransport \
-  --disable-xlib \
-  --disable-cuda \
-  --disable-cuvid \
-  --disable-nvenc \
-  --disable-vaapi \
-  --disable-vdpau \
-  --disable-videotoolbox \
-  --disable-audiotoolbox \
-  --disable-appkit \
-  --disable-alsa \
-  --disable-cuda \
-  --disable-cuvid \
-  --disable-nvenc \
-  --disable-vaapi \
-  --disable-vdpau \
-  ${CONFIGURE_POSTFIX} 1>>"${BASEDIR}"/build.log 2>&1
+  	--target-os=android --enable-cross-compile --cross-prefix="${HOST}-" --cc=$CC \
+  	--sysroot="${ANDROID_SYSROOT}" --prefix="${FFMPEG_LIBRARY_PATH}" \
+  	--arch="${TARGET_ARCH}" --cpu="${TARGET_CPU}" --pkg-config="${HOST_PKG_CONFIG_PATH}" \
+	  --extra-cflags="-I${PKG_CONFIG_LIBDIR}/include $cpuflags" --extra-ldflags="-L${PKG_CONFIG_LIBDIR}/lib" \
+  	--enable-{jni,mediacodec,mbedtls,libdav1d,libxml2} --disable-vulkan \
+  	--disable-static --enable-shared --enable-{gpl,version3} \
+  	--disable-{stripping,doc,programs} \
+  	--disable-{muxers,encoders,devices} --enable-encoder=mjpeg,png \
+  	--enable-demuxer=dash 1>>"${BASEDIR}"/build.log 2>&1
 
 if [[ $? -ne 0 ]]; then
   echo -e "failed\n\nSee build.log for details\n"

@@ -152,7 +152,7 @@ fi
 
 # PROCESS FULL OPTION AS LAST OPTION
 if [[ -n ${BUILD_FULL} ]]; then
-  for library in {0..61}; do
+  for library in {0..62}; do
     if [ ${GPL_ENABLED} == "yes" ]; then
       enable_library "$(get_library_name $library)" 1
     else
@@ -234,7 +234,7 @@ for run_arch in {0..12}; do
     . "${BASEDIR}"/scripts/main-android.sh "${ENABLED_LIBRARIES[@]}" || exit 1
 
     # CLEAR FLAGS
-    for library in {0..61}; do
+    for library in {0..62}; do
       library_name=$(get_library_name ${library})
       unset "$(echo "OK_${library_name}" | sed "s/\-/\_/g")"
       unset "$(echo "DEPENDENCY_REBUILT_${library_name}" | sed "s/\-/\_/g")"

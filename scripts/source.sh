@@ -1,5 +1,11 @@
 #!/bin/bash
 
+v_harfbuzz=5.3.1
+v_fribidi=1.0.12
+v_freetype=2-12-1
+v_mbedtls=2.28.2
+v_libxml2=2.10.3
+
 #
 # 1. library name
 # 2. source type 1/2/3
@@ -22,8 +28,8 @@ get_library_source() {
     SOURCE_TYPE="TAG"
     ;;
   dav1d)
-    SOURCE_REPO_URL="https://github.com/tanersener/dav1d"
-    SOURCE_ID="0.9.2"
+    SOURCE_REPO_URL="https://code.videolan.org/videolan/dav1d.git"
+    SOURCE_ID="master"
     SOURCE_TYPE="TAG"
     ;;
   expat)
@@ -32,10 +38,9 @@ get_library_source() {
     SOURCE_TYPE="TAG"
     ;;
   ffmpeg)
-    SOURCE_REPO_URL="https://github.com/tanersener/FFmpeg"
-    SOURCE_ID="30322ebe3c55d0fb18bea4ae04d0fcaf1f97d27f"
-    SOURCE_TYPE="COMMIT"
-    SOURCE_GIT_DESCRIBE="n4.5-dev-3393-g30322ebe3c" # git describe --tags
+    SOURCE_REPO_URL="https://github.com/FFmpeg/FFmpeg"
+    SOURCE_ID="master"
+    SOURCE_TYPE="TAG"
     ;;
   fontconfig)
     SOURCE_REPO_URL="https://github.com/tanersener/fontconfig"
@@ -43,13 +48,13 @@ get_library_source() {
     SOURCE_TYPE="TAG"
     ;;
   freetype)
-    SOURCE_REPO_URL="https://github.com/tanersener/freetype2"
-    SOURCE_ID="VER-2-11-1"
+    SOURCE_REPO_URL="git://git.sv.nongnu.org/freetype/freetype2.git"
+    SOURCE_ID="VER-$v_freetype"
     SOURCE_TYPE="TAG"
     ;;
   fribidi)
-    SOURCE_REPO_URL="https://github.com/tanersener/fribidi"
-    SOURCE_ID="v1.0.11"
+    SOURCE_REPO_URL="https://github.com/fribidi/fribidi"
+    SOURCE_ID="v$v_fribidi"
     SOURCE_TYPE="TAG"
     ;;
   giflib)
@@ -68,8 +73,8 @@ get_library_source() {
     SOURCE_TYPE="TAG"
     ;;
   harfbuzz)
-    SOURCE_REPO_URL="https://github.com/tanersener/harfbuzz"
-    SOURCE_ID="3.2.0"
+    SOURCE_REPO_URL="https://github.com/harfbuzz/harfbuzz"
+    SOURCE_ID="$v_harfbuzz"
     SOURCE_TYPE="TAG"
     ;;
   jpeg)
@@ -98,8 +103,8 @@ get_library_source() {
     SOURCE_TYPE="TAG"
     ;;
   libass)
-    SOURCE_REPO_URL="https://github.com/tanersener/libass"
-    SOURCE_ID="0.15.2"
+    SOURCE_REPO_URL="https://github.com/libass/libass"
+    SOURCE_ID="master"
     SOURCE_TYPE="TAG"
     ;;
   libiconv)
@@ -163,8 +168,13 @@ get_library_source() {
     SOURCE_TYPE="TAG"
     ;;
   libxml2)
-    SOURCE_REPO_URL="https://github.com/tanersener/libxml2"
-    SOURCE_ID="v2.9.12"
+    SOURCE_REPO_URL="https://gitlab.gnome.org/GNOME/libxml2.git"
+    SOURCE_ID="v$v_libxml2"
+    SOURCE_TYPE="TAG"
+    ;;
+  mbedtls)
+    SOURCE_REPO_URL="https://github.com/Mbed-TLS/mbedtls"
+    SOURCE_ID="v$v_mbedtls"
     SOURCE_TYPE="TAG"
     ;;
   nettle)
