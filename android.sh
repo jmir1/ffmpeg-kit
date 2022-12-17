@@ -1,5 +1,36 @@
 #!/bin/bash
 
+# LOAD INITIAL SETTINGS
+export BASEDIR="$(pwd)"
+export FFMPEG_KIT_BUILD_TYPE="android"
+source "${BASEDIR}"/scripts/variable.sh
+source "${BASEDIR}"/scripts/function-${FFMPEG_KIT_BUILD_TYPE}.sh
+
+# SET DEFAULTS SETTINGS
+enable_default_android_architectures
+enable_main_build
+
+# DOWNLOAD SDK & NDK FROM ANIYOMI-MPV-LIB
+echo -n -e "\nDownloading aniyomi-mpv-lib dependencies"
+git clone https://github.com/jmir1/aniyomi-mpv-lib 1>>/dev/null 2>&1
+cd aniyomi-mpv-lib/buildscripts || return 1
+./download.sh 1>>/dev/null 2>&1
+
+# ENABLE FFMPEG-KIT PROTOCOLS
+cat ../../tools/protocols/libavformat_file.c >> deps/ffmpeg/libavformat/file.c
+cat ../../tools/protocols/libavutil_file.h >> deps/ffmpeg/libavutil/file.h
+cat ../../tools/protocols/libavutil_file.c >> deps/ffmpeg/libavutil/file.c
+awk '{gsub(/ff_file_protocol;/,"ff_file_protocol;\nextern const URLProtocol ff_saf_protocol;")}1' deps/ffmpeg/libavformat/protocols.c > deps/ffmpeg/libavformat/protocols.c.tmp
+cat deps/ffmpeg/libavformat/protocols.c.tmp > deps/ffmpeg/libavformat/protocols.c
+echo -e "\nINFO: Enabled custom ffmpeg-kit protocols\n" 1>>"${BASEDIR}"/build.log 2>&1
+
+# EXPORT BUILD TOOL LOCATIONS
+export ANDROID_SDK_ROOT="$PWD/sdk/android-sdk-linux"
+export ANDROID_NDK_ROOT="$PWD/sdk/android-ndk-r25b"
+
+cd "$BASEDIR" || return 1
+
+# DETECT ANDROID NDK VERSION
 if [[ -z ${ANDROID_SDK_ROOT} ]]; then
   echo -e "\n(*) ANDROID_SDK_ROOT not defined\n"
   exit 1
@@ -10,19 +41,6 @@ if [[ -z ${ANDROID_NDK_ROOT} ]]; then
   exit 1
 fi
 
-# LOAD INITIAL SETTINGS
-export BASEDIR="$(pwd)"
-export FFMPEG_KIT_BUILD_TYPE="android"
-source "${BASEDIR}"/scripts/variable.sh
-source "${BASEDIR}"/scripts/function-${FFMPEG_KIT_BUILD_TYPE}.sh
-disabled_libraries=()
-
-# SET DEFAULTS SETTINGS
-enable_default_android_architectures
-enable_default_android_libraries
-enable_main_build
-
-# DETECT ANDROID NDK VERSION
 export DETECTED_NDK_VERSION=$(grep -Eo "Revision.*" "${ANDROID_NDK_ROOT}"/source.properties | sed 's/Revision//g;s/=//g;s/ //g')
 echo -e "\nINFO: Using Android NDK v${DETECTED_NDK_VERSION} provided at ${ANDROID_NDK_ROOT}\n" 1>>"${BASEDIR}"/build.log 2>&1
 echo -e "INFO: Build options: $*\n" 1>>"${BASEDIR}"/build.log 2>&1
@@ -48,7 +66,6 @@ done
 
 # PROCESS BUILD OPTIONS
 while [ ! $# -eq 0 ]; do
-
   case $1 in
   -h | --help)
     DISPLAY_HELP="1"
@@ -145,35 +162,6 @@ while [ ! $# -eq 0 ]; do
   shift
 done
 
-if [[ -z ${BUILD_VERSION} ]]; then
-  echo -e "\n(*) error: Can not run git commands in this folder. See build.log.\n"
-  exit 1
-fi
-
-# PROCESS FULL OPTION AS LAST OPTION
-if [[ -n ${BUILD_FULL} ]]; then
-  for library in {0..61}; do
-    if [ ${GPL_ENABLED} == "yes" ]; then
-      enable_library "$(get_library_name $library)" 1
-    else
-      if [[ $(is_gpl_licensed $library) -eq 1 ]]; then
-        enable_library "$(get_library_name $library)" 1
-      fi
-    fi
-  done
-fi
-
-# DISABLE SPECIFIED LIBRARIES
-for disabled_library in ${disabled_libraries[@]}; do
-  set_library "${disabled_library}" 0
-done
-
-# IF HELP DISPLAYED EXIT
-if [[ -n ${DISPLAY_HELP} ]]; then
-  display_help
-  exit 0
-fi
-
 # SET API LEVEL IN build.gradle
 ${SED_INLINE} "s/minSdkVersion .*/minSdkVersion ${API}/g" "${BASEDIR}"/android/ffmpeg-kit-android-lib/build.gradle 1>>"${BASEDIR}"/build.log 2>&1
 ${SED_INLINE} "s/versionCode ..0/versionCode ${API}0/g" "${BASEDIR}"/android/ffmpeg-kit-android-lib/build.gradle 1>>"${BASEDIR}"/build.log 2>&1
@@ -182,38 +170,12 @@ echo -e "\nBuilding ffmpeg-kit ${BUILD_TYPE_ID}library for Android\n"
 echo -e -n "INFO: Building ffmpeg-kit ${BUILD_VERSION} ${BUILD_TYPE_ID}library for Android: " 1>>"${BASEDIR}"/build.log 2>&1
 echo -e "$(date)\n" 1>>"${BASEDIR}"/build.log 2>&1
 
-# PRINT BUILD SUMMARY
-print_enabled_architectures
-print_enabled_libraries
-print_reconfigure_requested_libraries
-print_rebuild_requested_libraries
-print_redownload_requested_libraries
-print_custom_libraries
-
-# VALIDATE GPL FLAGS
-for gpl_library in {$LIBRARY_X264,$LIBRARY_XVIDCORE,$LIBRARY_X265,$LIBRARY_LIBVIDSTAB,$LIBRARY_RUBBERBAND}; do
-  if [[ ${ENABLED_LIBRARIES[$gpl_library]} -eq 1 ]]; then
-    library_name=$(get_library_name ${gpl_library})
-
-    if [ ${GPL_ENABLED} != "yes" ]; then
-      echo -e "\n(*) Invalid configuration detected. GPL library ${library_name} enabled without --enable-gpl flag.\n"
-      echo -e "\n(*) Invalid configuration detected. GPL library ${library_name} enabled without --enable-gpl flag.\n" 1>>"${BASEDIR}"/build.log 2>&1
-      exit 1
-    fi
-  fi
-done
-
-echo -n -e "\nDownloading sources: "
-echo -e "INFO: Downloading the source code of ffmpeg and external libraries.\n" 1>>"${BASEDIR}"/build.log 2>&1
-
-# DOWNLOAD GNU CONFIG
-download_gnu_config
-
 # DOWNLOAD LIBRARY SOURCES
 downloaded_library_sources "${ENABLED_LIBRARIES[@]}"
 
 # SAVE ORIGINAL API LEVEL = NECESSARY TO BUILD 64bit ARCHITECTURES
 export ORIGINAL_API=${API}
+export SKIP_ffmpeg=1
 
 # BUILD ENABLED LIBRARIES ON ENABLED ARCHITECTURES
 for run_arch in {0..12}; do
@@ -250,8 +212,10 @@ rm -f "${BASEDIR}"/android/build/.armv7 1>>"${BASEDIR}"/build.log 2>&1
 rm -f "${BASEDIR}"/android/build/.armv7neon 1>>"${BASEDIR}"/build.log 2>&1
 rm -f "${BASEDIR}"/android/build/.lts 1>>"${BASEDIR}"/build.log 2>&1
 ANDROID_ARCHITECTURES=""
+ANIYOMI_ARCHITECTURES=""
 if [[ ${ENABLED_ARCHITECTURES[ARCH_ARM_V7A]} -eq 1 ]] || [[ ${ENABLED_ARCHITECTURES[ARCH_ARM_V7A_NEON]} -eq 1 ]]; then
   ANDROID_ARCHITECTURES+="$(get_android_arch 0) "
+  ANIYOMI_ARCHITECTURES+="1 "
 fi
 if [[ ${ENABLED_ARCHITECTURES[ARCH_ARM_V7A]} -eq 1 ]]; then
   mkdir -p "${BASEDIR}"/android/build 1>>"${BASEDIR}"/build.log 2>&1
@@ -263,20 +227,75 @@ if [[ ${ENABLED_ARCHITECTURES[ARCH_ARM_V7A_NEON]} -eq 1 ]]; then
 fi
 if [[ ${ENABLED_ARCHITECTURES[ARCH_ARM64_V8A]} -eq 1 ]]; then
   ANDROID_ARCHITECTURES+="$(get_android_arch 2) "
+  ANIYOMI_ARCHITECTURES+="2 "
 fi
 if [[ ${ENABLED_ARCHITECTURES[ARCH_X86]} -eq 1 ]]; then
   ANDROID_ARCHITECTURES+="$(get_android_arch 3) "
+  ANIYOMI_ARCHITECTURES+="3 "
 fi
 if [[ ${ENABLED_ARCHITECTURES[ARCH_X86_64]} -eq 1 ]]; then
   ANDROID_ARCHITECTURES+="$(get_android_arch 4) "
+  ANIYOMI_ARCHITECTURES+="4 "
 fi
 if [[ ! -z ${FFMPEG_KIT_LTS_BUILD} ]]; then
   mkdir -p "${BASEDIR}"/android/build 1>>"${BASEDIR}"/build.log 2>&1
   create_file "${BASEDIR}"/android/build/.lts
+  LTSPOSTFIX="-lts"
 fi
 
 # BUILD FFMPEG-KIT
 if [[ -n ${ANDROID_ARCHITECTURES} ]]; then
+
+  echo -n -e "\naniyomi-mpv-lib: "
+
+  # BUILD FFMPEG FROM ANIYOMI-MPV-LIB
+  cd aniyomi-mpv-lib/buildscripts || return 1
+  for i in $ANIYOMI_ARCHITECTURES; do
+    aniyomiarch=$(get_aniyomi_arch "$i")
+    androidarch=$(get_android_arch "$i")
+    prebuiltarch=$(get_prebuilt_arch "$i")
+    includearch=$(get_include_arch "$i")
+    archsuffix=$(get_arch_suffix "$i")
+    prebuilt_dir="$BASEDIR/prebuilt/android-$prebuiltarch$LTSPOSTFIX/ffmpeg"
+
+    echo -n -e "\nBuilding ffmpeg for $androidarch"
+
+    ./buildall.sh --arch "$aniyomiarch" ffmpeg 1>>"${BASEDIR}"/build.log 2>&1
+
+    echo -n -e "\nCopying generated files to $prebuilt_dir"
+    mkdir -p "$prebuilt_dir"
+    cp -r "prefix/$aniyomiarch/lib" "$prebuilt_dir/"
+    cp -r "prefix/$aniyomiarch/include" "$prebuilt_dir/"
+    mkdir -p "$prebuilt_dir/include/libavutil/x86"
+    mkdir -p "$prebuilt_dir/include/libavutil/arm"
+    mkdir -p "$prebuilt_dir/include/libavutil/aarch64"
+    mkdir -p "$prebuilt_dir/include/libavcodec/x86"
+    mkdir -p "$prebuilt_dir/include/libavcodec/arm"
+    cp deps/ffmpeg/_build$archsuffix/config.h "$prebuilt_dir/include/"
+    cp deps/ffmpeg/libavcodec/mathops.h "$prebuilt_dir/include/libavcodec/"
+    cp deps/ffmpeg/libavcodec/x86/mathops.h "$prebuilt_dir/include/libavcodec/x86/"
+    cp deps/ffmpeg/libavcodec/arm/mathops.h "$prebuilt_dir/include/libavcodec/arm/"
+    cp deps/ffmpeg/libavformat/network.h "$prebuilt_dir/include/libavformat/"
+    cp deps/ffmpeg/libavformat/os_support.h "$prebuilt_dir/include/libavformat/"
+    cp deps/ffmpeg/libavformat/url.h "$prebuilt_dir/include/libavformat/"
+    cp deps/ffmpeg/libavutil/bprint.h "$prebuilt_dir/include/libavutil/"
+    cp deps/ffmpeg/libavutil/getenv_utf8.h "$prebuilt_dir/include/libavutil/"
+    cp deps/ffmpeg/libavutil/attributes_internal.h "$prebuilt_dir/include/libavutil/"
+    cp deps/ffmpeg/libavutil/internal.h "$prebuilt_dir/include/libavutil/"
+    cp deps/ffmpeg/libavutil/libm.h "$prebuilt_dir/include/libavutil/"
+    cp deps/ffmpeg/libavutil/reverse.h "$prebuilt_dir/include/libavutil/"
+    cp deps/ffmpeg/libavutil/thread.h "$prebuilt_dir/include/libavutil/"
+    cp deps/ffmpeg/libavutil/timer.h "$prebuilt_dir/include/libavutil/"
+    cp deps/ffmpeg/libavutil/x86/asm.h "$prebuilt_dir/include/libavutil/x86/"
+    cp deps/ffmpeg/libavutil/x86/timer.h "$prebuilt_dir/include/libavutil/x86/"
+    cp deps/ffmpeg/libavutil/arm/timer.h "$prebuilt_dir/include/libavutil/arm/"
+    cp deps/ffmpeg/libavutil/aarch64/timer.h "$prebuilt_dir/include/libavutil/aarch64/"
+    cp deps/ffmpeg/libavutil/x86/emms.h "$prebuilt_dir/include/libavutil/x86/"
+    cp deps/ffmpeg/libavcodec/mathops.h "$prebuilt_dir/include/libavcodec/"
+    cp deps/ffmpeg/libavcodec/mathops.h "$prebuilt_dir/include/libavcodec/"
+    mkdir -p "$prebuilt_dir/cpu-features"
+  done
+  cd ../..
 
   echo -n -e "\nffmpeg-kit: "
 
@@ -288,59 +307,6 @@ if [[ -n ${ANDROID_ARCHITECTURES} ]]; then
   rm -rf "${BASEDIR}"/android/obj 1>>"${BASEDIR}"/build.log 2>&1
 
   cd "${BASEDIR}"/android 1>>"${BASEDIR}"/build.log 2>&1 || exit 1
-
-  # COPY EXTERNAL LIBRARY LICENSES
-  LICENSE_BASEDIR="${BASEDIR}"/android/ffmpeg-kit-android-lib/src/main/res/raw
-  rm -f "${LICENSE_BASEDIR}"/*.txt 1>>"${BASEDIR}"/build.log 2>&1 || exit 1
-  for library in {0..49}; do
-    if [[ ${ENABLED_LIBRARIES[$library]} -eq 1 ]]; then
-      ENABLED_LIBRARY=$(get_library_name ${library} | sed 's/-/_/g')
-      LICENSE_FILE="${LICENSE_BASEDIR}/license_${ENABLED_LIBRARY}.txt"
-
-      RC=$(copy_external_library_license_file ${library} "${LICENSE_FILE}")
-
-      if [[ ${RC} -ne 0 ]]; then
-        echo -e "DEBUG: Failed to copy the license file of ${ENABLED_LIBRARY}\n" 1>>"${BASEDIR}"/build.log 2>&1
-        echo -e "failed\n\nSee build.log for details\n"
-        exit 1
-      fi
-
-      echo -e "DEBUG: Copied the license file of ${ENABLED_LIBRARY} successfully\n" 1>>"${BASEDIR}"/build.log 2>&1
-    fi
-  done
-
-  # COPY CUSTOM LIBRARY LICENSES
-  for custom_library_index in "${CUSTOM_LIBRARIES[@]}"; do
-    library_name="CUSTOM_LIBRARY_${custom_library_index}_NAME"
-    relative_license_path="CUSTOM_LIBRARY_${custom_library_index}_LICENSE_FILE"
-
-    destination_license_path="${LICENSE_BASEDIR}/license_${!library_name}.txt"
-
-    cp "${BASEDIR}/src/${!library_name}/${!relative_license_path}" "${destination_license_path}" 1>>"${BASEDIR}"/build.log 2>&1
-
-    RC=$?
-
-    if [[ ${RC} -ne 0 ]]; then
-      echo -e "DEBUG: Failed to copy the license file of custom library ${!library_name}\n" 1>>"${BASEDIR}"/build.log 2>&1
-      echo -e "failed\n\nSee build.log for details\n"
-      exit 1
-    fi
-
-    echo -e "DEBUG: Copied the license file of custom library ${!library_name} successfully\n" 1>>"${BASEDIR}"/build.log 2>&1
-  done
-
-  # COPY LIBRARY LICENSES
-  if [[ ${GPL_ENABLED} == "yes" ]]; then
-    cp "${BASEDIR}"/tools/license/LICENSE.GPLv3 "${LICENSE_BASEDIR}"/license.txt 1>>"${BASEDIR}"/build.log 2>&1 || exit 1
-  else
-    cp "${BASEDIR}"/LICENSE "${LICENSE_BASEDIR}"/license.txt 1>>"${BASEDIR}"/build.log 2>&1 || exit 1
-  fi
-
-  echo -e "DEBUG: Copied the ffmpeg-kit license successfully\n" 1>>"${BASEDIR}"/build.log 2>&1
-
-  overwrite_file "${BASEDIR}"/tools/source/SOURCE "${LICENSE_BASEDIR}"/source.txt 1>>"${BASEDIR}"/build.log 2>&1 || exit 1
-
-  echo -e "DEBUG: Copied source.txt successfully\n" 1>>"${BASEDIR}"/build.log 2>&1
 
   # BUILD NATIVE LIBRARY
   if [[ ${SKIP_ffmpeg_kit} -ne 1 ]]; then
@@ -367,6 +333,7 @@ if [[ -n ${ANDROID_ARCHITECTURES} ]]; then
 
     echo -e -n "\nCreating Android archive under prebuilt: "
 
+    unset ANDROID_SDK_ROOT 
     # BUILD ANDROID ARCHIVE
     rm -f "${BASEDIR}"/android/ffmpeg-kit-android-lib/build/outputs/aar/ffmpeg-kit-release.aar 1>>"${BASEDIR}"/build.log 2>&1
     ./gradlew ffmpeg-kit-android-lib:clean ffmpeg-kit-android-lib:assembleRelease ffmpeg-kit-android-lib:testReleaseUnitTest 1>>"${BASEDIR}"/build.log 2>&1

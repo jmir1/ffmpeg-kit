@@ -61,19 +61,13 @@ enable_main_build() {
 enable_lts_build() {
   export FFMPEG_KIT_LTS_BUILD="1"
 
-  # LTS RELEASES USE API LEVEL 16 / Android 4.1 (JELLY BEAN)
-  export API=16
+  # LTS RELEASES USE API LEVEL 21 / Android 5.0 (LOLLIPOP)
+  export API=21
 }
 
 build_application_mk() {
   if [[ -n ${FFMPEG_KIT_LTS_BUILD} ]]; then
     local LTS_BUILD_FLAG="-DFFMPEG_KIT_LTS "
-  fi
-
-  if [[ ${ENABLED_LIBRARIES[$LIBRARY_X265]} -eq 1 ]] || [[ ${ENABLED_LIBRARIES[$LIBRARY_TESSERACT]} -eq 1 ]] || [[ ${ENABLED_LIBRARIES[$LIBRARY_OPENH264]} -eq 1 ]] || [[ ${ENABLED_LIBRARIES[$LIBRARY_SNAPPY]} -eq 1 ]] || [[ ${ENABLED_LIBRARIES[$LIBRARY_RUBBERBAND]} -eq 1 ]] || [[ ${ENABLED_LIBRARIES[$LIBRARY_ZIMG]} -eq 1 ]] || [[ ${ENABLED_LIBRARIES[$LIBRARY_SRT]} -eq 1 ]] || [[ ${ENABLED_LIBRARIES[$LIBRARY_CHROMAPRINT]} -eq 1 ]] || [[ -n ${CUSTOM_LIBRARY_USES_CPP} ]]; then
-    local APP_STL="c++_shared"
-  else
-    local APP_STL="none"
   fi
 
   local BUILD_DATE="-DFFMPEG_KIT_BUILD_DATE=$(date +%Y%m%d 2>>"${BASEDIR}"/build.log)"
@@ -85,7 +79,7 @@ APP_OPTIM := release
 
 APP_ABI := ${ANDROID_ARCHITECTURES}
 
-APP_STL := ${APP_STL}
+APP_STL := c++_shared
 
 APP_PLATFORM := android-${API}
 
@@ -215,6 +209,80 @@ get_android_arch() {
   4)
     echo "x86_64"
     ;;
+  esac
+}
+
+get_arch_suffix() {
+  case $1 in
+  0 | 1)
+    echo ""
+    ;;
+  2)
+    echo "-arm64"
+    ;;
+  3)
+    echo "-x86"
+    ;;
+  4)
+    echo "-x64"
+    ;;
+  esac
+}
+
+get_aniyomi_arch() {
+  case $1 in
+  1)
+    echo "armv7l"
+    ;;
+  2)
+    echo "arm64"
+    ;;
+  3)
+    echo "x86"
+    ;;
+  4)
+    echo "x86_64"
+    ;;
+  *)
+    echo "unsupported"
+  esac
+}
+
+get_prebuilt_arch() {
+  case $1 in
+  1)
+    echo "arm"
+    ;;
+  2)
+    echo "arm64"
+    ;;
+  3)
+    echo "x86"
+    ;;
+  4)
+    echo "x86_64"
+    ;;
+  *)
+    echo "unsupported"
+  esac
+}
+
+get_include_arch() {
+  case $1 in
+  1)
+    echo "arm"
+    ;;
+  2)
+    echo "aarch64"
+    ;;
+  3)
+    echo "x86"
+    ;;
+  4)
+    echo "x86_64"
+    ;;
+  *)
+    echo "unsupported"
   esac
 }
 
