@@ -6,7 +6,7 @@ android {
     ndkVersion "22.1.7171670"
 
     defaultConfig {
-        minSdk 24
+        minSdk 23
         targetSdk 31
         versionCode 210510
         versionName "5.1.LTS"

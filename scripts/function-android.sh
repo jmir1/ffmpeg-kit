@@ -55,7 +55,7 @@ under the prebuilt folder.\n"
 }
 
 enable_main_build() {
-  export API=24
+  export API=23
 }
 
 enable_lts_build() {
@@ -467,8 +467,8 @@ get_common_linked_libraries() {
   case $1 in
   ffmpeg)
 
-    # SUPPORTED ON API LEVEL 24 AND LATER
-    if [[ ${API} -ge 24 ]]; then
+    # SUPPORTED ON API LEVEL 23 AND LATER
+    if [[ ${API} -ge 23 ]]; then
       echo "-lc -lm -ldl -llog -lcamera2ndk -lmediandk ${COMMON_LIBRARY_PATHS}"
     else
       echo "-lc -lm -ldl -llog ${COMMON_LIBRARY_PATHS}"
