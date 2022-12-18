@@ -1,4 +1,5 @@
 apply plugin: 'com.android.library'
+apply plugin: 'maven-publish'
 
 android {
     namespace 'com.arthenica.ffmpegkit'
@@ -36,6 +37,31 @@ android {
         unitTests.returnDefaultValues = true
         unitTests.all {
             systemProperty 'enable.ffmpeg.kit.test.mode', 'true'
+        }
+    }
+}
+
+def getVersionName = { ->
+    return "5.1.LTS"
+}
+
+def getGroupId = { ->
+    return "com.github.jmir1"
+}
+
+
+task sourceJar(type: Jar) {
+    classifier = 'sources'
+    from android.sourceSets.main.java.srcDirs
+}
+
+publishing {
+    publications {
+        bar(MavenPublication) {
+            groupId getGroupId()
+            version getVersionName()
+            artifact("$buildDir/outputs/aar/ffmpeg-kit-release.aar")
+            artifact(tasks["sourceJar"])
         }
     }
 }
