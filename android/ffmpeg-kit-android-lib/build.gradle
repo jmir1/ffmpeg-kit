@@ -10,7 +10,7 @@ android {
         minSdk 23
         targetSdk 31
         versionCode 210510
-        versionName "5.1.LTS"
+        versionName "1.7.n"
         project.archivesBaseName = "ffmpeg-kit"
         consumerProguardFiles "consumer-rules.pro"
     }
@@ -39,10 +39,21 @@ android {
             systemProperty 'enable.ffmpeg.kit.test.mode', 'true'
         }
     }
+
+    packagingOptions {
+        exclude '**/libavcodec.so'
+        exclude '**/libavdevice.so'
+        exclude '**/libavfilter.so'
+        exclude '**/libavformat.so'
+        exclude '**/libavutil.so'
+        exclude '**/libswresample.so'
+        exclude '**/libswscale.so'
+        exclude '**/libc++_shared.so'
+    }
 }
 
 def getVersionName = { ->
-    return "5.1.LTS"
+    return "1.7.n"
 }
 
 def getGroupId = { ->
