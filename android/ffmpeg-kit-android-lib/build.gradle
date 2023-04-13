@@ -10,7 +10,7 @@ android {
         minSdk 23
         targetSdk 31
         versionCode 210510
-        versionName "1.8"
+        versionName "1.9"
         project.archivesBaseName = "ffmpeg-kit"
         consumerProguardFiles "consumer-rules.pro"
     }
@@ -42,7 +42,7 @@ android {
 }
 
 def getVersionName = { ->
-    return "1.8.n"
+    return "1.9"
 }
 
 def getGroupId = { ->
