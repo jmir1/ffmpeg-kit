@@ -273,6 +273,7 @@ if [[ -n ${ANDROID_ARCHITECTURES} ]]; then
     cp deps/ffmpeg/libavcodec/mathops.h "$prebuilt_dir/include/libavcodec/"
     cp deps/ffmpeg/libavcodec/x86/mathops.h "$prebuilt_dir/include/libavcodec/x86/"
     cp deps/ffmpeg/libavcodec/arm/mathops.h "$prebuilt_dir/include/libavcodec/arm/"
+    cp deps/ffmpeg/libavformat/avio.h "$prebuilt_dir/include/libavformat/"
     cp deps/ffmpeg/libavformat/network.h "$prebuilt_dir/include/libavformat/"
     cp deps/ffmpeg/libavformat/os_support.h "$prebuilt_dir/include/libavformat/"
     cp deps/ffmpeg/libavformat/url.h "$prebuilt_dir/include/libavformat/"
