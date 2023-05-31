@@ -19,7 +19,6 @@ cd aniyomi-mpv-lib/buildscripts || return 1
 # ENABLE FFMPEG-KIT PROTOCOLS
 cat ../../tools/protocols/libavutil_file.h >> deps/ffmpeg/libavutil/file.h
 cat ../../tools/protocols/libavutil_file.c >> deps/ffmpeg/libavutil/file.c
-cat deps/ffmpeg/libavformat/protocols.c.tmp > deps/ffmpeg/libavformat/protocols.c
 echo -e "\nINFO: Enabled custom ffmpeg-kit protocols\n" 1>>"${BASEDIR}"/build.log 2>&1
 
 # EXPORT BUILD TOOL LOCATIONS

@@ -64,6 +64,7 @@
 #include "libavcodec/version.h"
 
 #include "libavformat/avformat.h"
+#include "libavformat/avio.h"
 #include "libavformat/version.h"
 
 #include "libavdevice/avdevice.h"
