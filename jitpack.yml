@@ -1,8 +1,10 @@
 jdk:
   - openjdk17
+env:
+  RELEASE_VERSION: "1.10"
 before_install:
   - cd android
   - mkdir -p ffmpeg-kit-android-lib/build/outputs/aar
-  - wget -O ffmpeg-kit-android-lib/build/outputs/aar/ffmpeg-kit-release.aar https://github.com/jmir1/ffmpeg-kit/releases/download/$VERSION/aniyomi-ffmpeg-kit-$VERSION.aar
+  - wget -O ffmpeg-kit-android-lib/build/outputs/aar/ffmpeg-kit-release.aar https://github.com/jmir1/ffmpeg-kit/releases/download/$RELEASE_VERSION/aniyomi-ffmpeg-kit-$RELEASE_VERSION.aar
 install:
   - ./gradlew ffmpeg-kit-android-lib:publishBarPublicationToMavenLocal
