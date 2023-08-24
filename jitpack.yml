@@ -1,5 +1,5 @@
 jdk:
-  - openjdk11
+  - openjdk17
 before_install:
   - cd android
   - mkdir -p ffmpeg-kit-android-lib/build/outputs/aar
