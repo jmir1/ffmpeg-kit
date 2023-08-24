@@ -55,9 +55,9 @@ libraries are created under the prebuilt folder.\n"
   display_help_gpl_libraries
   display_help_custom_libraries
   if [[ -n ${FFMPEG_KIT_XCF_BUILD} ]]; then
-    display_help_advanced_options "  --no-framework\t\tdo not build xcframework bundles [no]"
+    display_help_advanced_options "  --no-framework\t\tdo not build xcframework bundles [no]"  "  --no-bitcode\t\t\tdo not enable bitcode in bundles [no]"
   else
-    display_help_advanced_options "  --no-framework\t\tdo not build framework bundles [no]"
+    display_help_advanced_options "  --no-framework\t\tdo not build framework bundles [no]"  "  --no-bitcode\t\t\tdo not enable bitcode in bundles [no]"
   fi
 }
 
@@ -105,16 +105,19 @@ get_common_cflags() {
   fi
 
   local BUILD_DATE="-DFFMPEG_KIT_BUILD_DATE=$(date +%Y%m%d 2>>"${BASEDIR}"/build.log)"
+  if [ -z $NO_BITCODE ]; then
+    local BITCODE_FLAGS="-fembed-bitcode"
+  fi
 
   case ${ARCH} in
   i386 | x86-64 | arm64-simulator)
     echo "-fstrict-aliasing -DIOS ${LTS_BUILD_FLAG}${BUILD_DATE} -isysroot ${SDK_PATH}"
     ;;
   *-mac-catalyst)
-    echo "-fstrict-aliasing -fembed-bitcode -DMACOSX ${LTS_BUILD_FLAG}${BUILD_DATE} -isysroot ${SDK_PATH}"
+    echo "-fstrict-aliasing ${BITCODE_FLAGS} -DMACOSX ${LTS_BUILD_FLAG}${BUILD_DATE} -isysroot ${SDK_PATH}"
     ;;
   *)
-    echo "-fstrict-aliasing -fembed-bitcode -DIOS ${LTS_BUILD_FLAG}${BUILD_DATE} -isysroot ${SDK_PATH}"
+    echo "-fstrict-aliasing ${BITCODE_FLAGS} -DIOS ${LTS_BUILD_FLAG}${BUILD_DATE} -isysroot ${SDK_PATH}"
     ;;
   esac
 }
@@ -205,6 +208,9 @@ get_app_specific_cflags() {
   ffmpeg-kit)
     APP_FLAGS="-std=c99 -Wno-unused-function -Wall -Wno-deprecated-declarations -Wno-pointer-sign -Wno-switch -Wno-unused-result -Wno-unused-variable -DPIC -fobjc-arc"
     ;;
+  gnutls)
+    APP_FLAGS="-std=c99 -Wno-unused-function -D_GL_USE_STDLIB_ALLOC=1"
+    ;;
   jpeg)
     APP_FLAGS="-Wno-nullability-completeness"
     ;;
@@ -218,7 +224,7 @@ get_app_specific_cflags() {
     APP_FLAGS="-fno-common -DPIC"
     ;;
   sdl)
-    APP_FLAGS="-DPIC -Wno-unused-function -D__IPHONEOS__"
+    APP_FLAGS="-DPIC -Wno-declaration-after-statement -Wno-unused-function -D__IPHONEOS__"
     ;;
   shine)
     APP_FLAGS="-Wno-unused-function"
@@ -278,7 +284,9 @@ get_cxxflags() {
   local BITCODE_FLAGS=""
   case ${ARCH} in
   armv7 | armv7s | arm64 | arm64e | *-mac-catalyst)
-    local BITCODE_FLAGS="-fembed-bitcode"
+    if [ -z $NO_BITCODE ]; then
+      local BITCODE_FLAGS="-fembed-bitcode"
+    fi
     ;;
   esac
 
@@ -289,11 +297,14 @@ get_cxxflags() {
   gnutls)
     echo "-std=c++11 -fno-rtti ${BITCODE_FLAGS} ${COMMON_CFLAGS} ${OPTIMIZATION_FLAGS}"
     ;;
-  libwebp | xvidcore)
-    echo "-std=c++11 -fno-exceptions -fno-rtti ${BITCODE_FLAGS} -fno-common -DPIC ${COMMON_CFLAGS} ${OPTIMIZATION_FLAGS}"
-    ;;
   libaom)
     echo "-std=c++11 -fno-exceptions ${BITCODE_FLAGS} ${COMMON_CFLAGS} ${OPTIMIZATION_FLAGS}"
+    ;;
+  libilbc)
+    echo "-std=c++14 -fno-exceptions -fno-rtti ${BITCODE_FLAGS} ${COMMON_CFLAGS} ${OPTIMIZATION_FLAGS}"
+    ;;
+  libwebp | xvidcore)
+    echo "-std=c++11 -fno-exceptions -fno-rtti ${BITCODE_FLAGS} -fno-common -DPIC ${COMMON_CFLAGS} ${OPTIMIZATION_FLAGS}"
     ;;
   opencore-amr)
     echo "-fno-rtti ${BITCODE_FLAGS} ${COMMON_CFLAGS} ${OPTIMIZATION_FLAGS}"
@@ -301,7 +312,7 @@ get_cxxflags() {
   rubberband)
     echo "-fno-rtti ${BITCODE_FLAGS} ${COMMON_CFLAGS} ${OPTIMIZATION_FLAGS}"
     ;;
-  srt | zimg)
+  srt | tesseract | zimg)
     echo "-std=c++11 ${BITCODE_FLAGS} ${COMMON_CFLAGS} ${OPTIMIZATION_FLAGS}"
     ;;
   *)
@@ -384,12 +395,15 @@ get_ldflags() {
     local OPTIMIZATION_FLAGS="${FFMPEG_KIT_DEBUG}"
   fi
   local COMMON_FLAGS=$(get_common_ldflags)
+  if [ -z $NO_BITCODE ]; then
+    local BITCODE_FLAGS="-fembed-bitcode -Wc,-fembed-bitcode"
+  fi
 
   case $1 in
   ffmpeg-kit)
     case ${ARCH} in
     armv7 | armv7s | arm64 | arm64e | *-mac-catalyst)
-      echo "${ARCH_FLAGS} ${LINKED_LIBRARIES} ${COMMON_FLAGS} -fembed-bitcode -Wc,-fembed-bitcode ${OPTIMIZATION_FLAGS}"
+      echo "${ARCH_FLAGS} ${LINKED_LIBRARIES} ${COMMON_FLAGS} ${BITCODE_FLAGS} ${OPTIMIZATION_FLAGS}"
       ;;
     *)
       echo "${ARCH_FLAGS} ${LINKED_LIBRARIES} ${COMMON_FLAGS} ${OPTIMIZATION_FLAGS}"
@@ -429,7 +443,7 @@ set_toolchain_paths() {
   LOCAL_ASMFLAGS="$(get_asmflags $1)"
   case ${ARCH} in
   armv7*)
-    if [ "$1" == "x265" ]; then
+    if [ "$1" == "x265" ] || [ "$1" == "libilbc" ]; then
       export AS="${LOCAL_GAS_PREPROCESSOR}"
       export AS_ARGUMENTS="-arch arm"
       export ASM_FLAGS="${LOCAL_ASMFLAGS}"
@@ -438,7 +452,7 @@ set_toolchain_paths() {
     fi
     ;;
   arm64*)
-    if [ "$1" == "x265" ]; then
+    if [ "$1" == "x265" ] || [ "$1" == "libilbc" ]; then
       export AS="${LOCAL_GAS_PREPROCESSOR}"
       export AS_ARGUMENTS="-arch aarch64"
       export ASM_FLAGS="${LOCAL_ASMFLAGS}"
