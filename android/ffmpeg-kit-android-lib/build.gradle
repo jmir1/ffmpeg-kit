@@ -12,7 +12,7 @@ android {
         minSdk 24
         targetSdk 33
         versionCode 240600
-        versionName "1.9"
+        versionName "1.10"
         project.archivesBaseName = "ffmpeg-kit"
         consumerProguardFiles "consumer-rules.pro"
     }
@@ -44,7 +44,7 @@ android {
 }
 
 def getVersionName = { ->
-    return "1.9"
+    return "1.10"
 }
 
 def getGroupId = { ->
@@ -53,7 +53,7 @@ def getGroupId = { ->
 
 
 task sourceJar(type: Jar) {
-    classifier = 'sources'
+    archiveClassifier = 'sources'
     from android.sourceSets.main.java.srcDirs
 }
 

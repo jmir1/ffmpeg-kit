@@ -290,7 +290,6 @@ if [[ -n ${ANDROID_ARCHITECTURES} ]]; then
     cp deps/ffmpeg/libavutil/aarch64/timer.h "$prebuilt_dir/include/libavutil/aarch64/"
     cp deps/ffmpeg/libavutil/x86/emms.h "$prebuilt_dir/include/libavutil/x86/"
     cp deps/ffmpeg/libavcodec/mathops.h "$prebuilt_dir/include/libavcodec/"
-    cp deps/ffmpeg/libavcodec/mathops.h "$prebuilt_dir/include/libavcodec/"
     mkdir -p "$prebuilt_dir/cpu-features"
   done
   cd ../..
