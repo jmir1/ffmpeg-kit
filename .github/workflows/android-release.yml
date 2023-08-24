@@ -34,3 +34,6 @@ jobs:
             aniyomi-ffmpeg-kit-${{ github.ref_name }}.aar
           draft: false
           prerelease: false
+      - name: print build logs
+        if: ${{ always() }}
+        run: cat build.log
