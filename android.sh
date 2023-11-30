@@ -26,7 +26,7 @@ echo -e "\nINFO: Enabled custom ffmpeg-kit protocols\n" 1>>"${BASEDIR}"/build.lo
 
 # EXPORT BUILD TOOL LOCATIONS
 export ANDROID_SDK_ROOT="$PWD/sdk/android-sdk-linux"
-export ANDROID_NDK_ROOT="$PWD/sdk/android-ndk-r25c"
+export ANDROID_NDK_ROOT="$PWD/sdk/android-ndk-r26b"
 
 cd "$BASEDIR" || return 1
 
