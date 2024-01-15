@@ -12,7 +12,7 @@ enable_main_build
 
 # DOWNLOAD SDK & NDK FROM ANIYOMI-MPV-LIB
 echo -n -e "\nDownloading aniyomi-mpv-lib dependencies"
-git clone https://github.com/aniyomiorg/aniyomi-mpv-lib 1>>/dev/null 2>&1
+git clone https://github.com/aniyomiorg/aniyomi-mpv-lib --depth 1 1>>/dev/null 2>&1
 cd aniyomi-mpv-lib/buildscripts || return 1
 ./download.sh 1>>/dev/null 2>&1
 
@@ -310,6 +310,7 @@ if [[ -n ${ANDROID_ARCHITECTURES} ]]; then
 
   # BUILD NATIVE LIBRARY
   if [[ ${SKIP_ffmpeg_kit} -ne 1 ]]; then
+    export APP_ALLOW_MISSING_DEPS=true
     if [ "$(is_darwin_arm64)" == "1" ]; then
        arch -x86_64 "${ANDROID_NDK_ROOT}"/ndk-build -B 1>>"${BASEDIR}"/build.log 2>&1
     else
@@ -333,7 +334,7 @@ if [[ -n ${ANDROID_ARCHITECTURES} ]]; then
 
     echo -e -n "\nCreating Android archive under prebuilt: "
 
-    unset ANDROID_SDK_ROOT 
+    # unset ANDROID_SDK_ROOT 
     # BUILD ANDROID ARCHIVE
     rm -f "${BASEDIR}"/android/ffmpeg-kit-android-lib/build/outputs/aar/ffmpeg-kit-release.aar 1>>"${BASEDIR}"/build.log 2>&1
     ./gradlew ffmpeg-kit-android-lib:clean ffmpeg-kit-android-lib:assembleRelease ffmpeg-kit-android-lib:testReleaseUnitTest 1>>"${BASEDIR}"/build.log 2>&1
