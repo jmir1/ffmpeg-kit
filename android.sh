@@ -280,6 +280,7 @@ if [[ -n ${ANDROID_ARCHITECTURES} ]]; then
     cp deps/ffmpeg/libavformat/os_support.h "$prebuilt_dir/include/libavformat/"
     cp deps/ffmpeg/libavformat/url.h "$prebuilt_dir/include/libavformat/"
     cp deps/ffmpeg/libavutil/bprint.h "$prebuilt_dir/include/libavutil/"
+    cp deps/ffmpeg/libavutil/emms.h "$prebuilt_dir/include/libavutil/"
     cp deps/ffmpeg/libavutil/getenv_utf8.h "$prebuilt_dir/include/libavutil/"
     cp deps/ffmpeg/libavutil/attributes_internal.h "$prebuilt_dir/include/libavutil/"
     cp deps/ffmpeg/libavutil/internal.h "$prebuilt_dir/include/libavutil/"
@@ -291,7 +292,6 @@ if [[ -n ${ANDROID_ARCHITECTURES} ]]; then
     cp deps/ffmpeg/libavutil/x86/timer.h "$prebuilt_dir/include/libavutil/x86/"
     cp deps/ffmpeg/libavutil/arm/timer.h "$prebuilt_dir/include/libavutil/arm/"
     cp deps/ffmpeg/libavutil/aarch64/timer.h "$prebuilt_dir/include/libavutil/aarch64/"
-    cp deps/ffmpeg/libavutil/x86/emms.h "$prebuilt_dir/include/libavutil/x86/"
     cp deps/ffmpeg/libavcodec/mathops.h "$prebuilt_dir/include/libavcodec/"
     mkdir -p "$prebuilt_dir/cpu-features"
   done
