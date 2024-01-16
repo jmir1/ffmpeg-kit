@@ -1,4 +1,5 @@
 apply plugin: 'com.android.library'
+apply plugin: 'maven-publish'
 
 android {
     if (project.android.hasProperty("namespace")) {
@@ -11,7 +12,7 @@ android {
         minSdk 16
         targetSdk 33
         versionCode 210600
-        versionName "1.10"
+        versionName "1.11"
         project.archivesBaseName = "ffmpeg-kit"
         consumerProguardFiles "consumer-rules.pro"
     }
@@ -41,11 +42,35 @@ android {
         }
     }
 
-
     publishing {
         singleVariant('release') {
             withJavadocJar()
             withSourcesJar()
+        }
+    }
+}
+
+def getVersionName = { ->
+    return "1.10"
+}
+
+def getGroupId = { ->
+    return "com.github.jmir1"
+}
+
+
+task sourceJar(type: Jar) {
+    archiveClassifier = 'sources'
+    from android.sourceSets.main.java.srcDirs
+}
+
+publishing {
+    publications {
+        bar(MavenPublication) {
+            groupId getGroupId()
+            version getVersionName()
+            artifact("$buildDir/outputs/aar/ffmpeg-kit-release.aar")
+            artifact(tasks["sourceJar"])
         }
     }
 }
