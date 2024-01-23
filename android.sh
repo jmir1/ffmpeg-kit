@@ -12,7 +12,8 @@ enable_main_build
 
 # DOWNLOAD SDK & NDK FROM ANIYOMI-MPV-LIB
 echo -n -e "\nDownloading aniyomi-mpv-lib dependencies"
-git clone https://github.com/aniyomiorg/aniyomi-mpv-lib --depth 1 1>>/dev/null 2>&1
+v_aniyomi_mpv=1.12.n
+git clone https://github.com/aniyomiorg/aniyomi-mpv-lib.git -b $v_aniyomi_mpv --depth 1 1>>/dev/null 2>&1
 cd aniyomi-mpv-lib/buildscripts || return 1
 ./download.sh 1>>/dev/null 2>&1
 
