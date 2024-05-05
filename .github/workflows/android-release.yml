@@ -8,7 +8,7 @@ on:
 jobs:
   publish-lts-on-linux:
     name: android lts on linux
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     defaults:
       run:
         shell: bash

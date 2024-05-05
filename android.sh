@@ -12,7 +12,7 @@ enable_main_build
 
 # DOWNLOAD SDK & NDK FROM ANIYOMI-MPV-LIB
 echo -n -e "\nDownloading aniyomi-mpv-lib dependencies"
-v_aniyomi_mpv=1.13.n
+v_aniyomi_mpv=1.15.n
 git clone https://github.com/aniyomiorg/aniyomi-mpv-lib.git -b $v_aniyomi_mpv --depth 1 1>>/dev/null 2>&1
 cd aniyomi-mpv-lib/buildscripts || return 1
 ./download.sh 1>>/dev/null 2>&1
@@ -27,7 +27,7 @@ echo -e "\nINFO: Enabled custom ffmpeg-kit protocols\n" 1>>"${BASEDIR}"/build.lo
 
 # EXPORT BUILD TOOL LOCATIONS
 export ANDROID_SDK_ROOT="$PWD/sdk/android-sdk-linux"
-export ANDROID_NDK_ROOT="$PWD/sdk/android-ndk-r26b"
+export ANDROID_NDK_ROOT="$PWD/sdk/android-ndk-r26d"
 
 cd "$BASEDIR" || return 1
 
