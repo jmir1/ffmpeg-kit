@@ -13,9 +13,9 @@ jobs:
       run:
         shell: bash
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: set up jdk 17
-        uses: actions/setup-java@v3
+        uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
           java-version: '17'
@@ -24,7 +24,7 @@ jobs:
       - name: copy build artifact
         run: mv prebuilt/bundle-android-aar-lts/ffmpeg-kit/ffmpeg-kit.aar aniyomi-ffmpeg-kit-${{ github.ref_name }}.aar
       - name: release artifact
-        uses: softprops/action-gh-release@v0.1.15
+        uses: softprops/action-gh-release@v2.0.5
         with:
           tag_name: ${{ github.ref_name }}
           name: aniyomi-ffmpeg-kit ${{ github.ref_name }}
